@@ -8,9 +8,11 @@ import { ACTION, ENTITY_TYPE } from "@prisma/client";
 import { db } from "@/lib/db";
 import { createAuditLog } from "@/lib/create-audit-log";
 import { createSafeAction } from "@/lib/create-safe-action";
+import { decreaseAvailableCount } from "@/lib/org-limit";
 
 import { DeleteBoard } from "./schema";
 import { InputType, ReturnType } from "./types";
+import { checkSubscription } from "@/lib/subscription";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
     const { userId, orgId } = auth();
@@ -20,6 +22,8 @@ const handler = async (data: InputType): Promise<ReturnType> => {
             error: "Unauthorized",
         };
     }
+
+    const isPro = await checkSubscription();
 
     const { id } = data;
     let board;
@@ -31,6 +35,10 @@ const handler = async (data: InputType): Promise<ReturnType> => {
                 orgId,
             },
         });
+
+        if (!isPro) {
+            await decreaseAvailableCount();
+        }
 
         await createAuditLog({
             entityId: board.id,
