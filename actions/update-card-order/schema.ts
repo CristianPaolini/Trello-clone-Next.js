@@ -9,7 +9,7 @@ export const UpdateCardOrder = z.object({
       listId: z.string(),
       createdAt: z.date(),
       updatedAt: z.date(),
-    }),
+    })
   ),
   boardId: z.string(),
 });
