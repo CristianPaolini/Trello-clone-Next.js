@@ -10,77 +10,78 @@ import { updateBoard } from "@/actions/update-board";
 import { useAction } from "@/hooks/use-action";
 
 interface BoardTitleFormProps {
-    data: Board;
-};
+  data: Board;
+}
 
-export const BoardTitleForm = ({
-    data
-}: BoardTitleFormProps) => {
-    const { execute } = useAction(updateBoard, {
-        onSuccess: (data) => {
-            toast.success(`Board "${data.title}" updated!`);
-            setTitle(data.title);
-            disableEditing();
-        },
-        onError: (error) => {
-            toast.error(error);
-        }
+export const BoardTitleForm = ({ data }: BoardTitleFormProps) => {
+  const { execute } = useAction(updateBoard, {
+    onSuccess: (data) => {
+      toast.success(`Board "${data.title}" updated!`);
+      setTitle(data.title);
+      disableEditing();
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  const formRef = useRef<ElementRef<"form">>(null);
+  const inputRef = useRef<ElementRef<"input">>(null);
+
+  const [title, setTitle] = useState(data.title);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const enableEditing = () => {
+    // TODO: Focus inputs
+    setIsEditing(true);
+    setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
     });
+  };
 
-    const formRef = useRef<ElementRef<"form">>(null);
-    const inputRef = useRef<ElementRef<"input">>(null);
+  const disableEditing = () => {
+    setIsEditing(false);
+  };
 
-    const [title, setTitle] = useState(data.title);
-    const [isEditing, setIsEditing] = useState(false);
+  const onSubmit = (formData: FormData) => {
+    const title = formData.get("title") as string;
 
-    const enableEditing = () => {
-        // TODO: Focus inputs
-        setIsEditing(true);
-        setTimeout(() => {
-            inputRef.current?.focus();
-            inputRef.current?.select();
-        });
-    };
+    execute({
+      title,
+      id: data.id,
+    });
+  };
 
-    const disableEditing = () => {
-        setIsEditing(false);
-    };
+  const onBlur = () => {
+    formRef.current?.requestSubmit();
+  };
 
-    const onSubmit = (formData: FormData) => {
-        const title = formData.get("title") as string;
-
-        execute({
-            title,
-            id: data.id
-        });
-    };
-
-    const onBlur = () => {
-        formRef.current?.requestSubmit();
-    };
-
-    if (isEditing) {
-        return (
-            <form action={onSubmit} ref={formRef} className="flex items-center gap-x-2">
-                <FormInput
-                    ref={inputRef}
-                    id="title"
-                    onBlur={onBlur}
-                    defaultValue={title}
-                    className="text-lg font-bold px-[7px] py-1 h-7 bg-transparent focus-visible:outline-none focus-visible:ring-transparent border-none"
-                />
-
-            </form>
-        );
-    }
-
+  if (isEditing) {
     return (
-        <Button
-            onClick={enableEditing}
-            variant="transparent"
-            className="font-bold text-lg h-auto w-auto p-1 px-2"
-        >
-            {title}
-        </Button>
+      <form
+        action={onSubmit}
+        ref={formRef}
+        className="flex items-center gap-x-2"
+      >
+        <FormInput
+          ref={inputRef}
+          id="title"
+          onBlur={onBlur}
+          defaultValue={title}
+          className="text-lg font-bold px-[7px] py-1 h-7 bg-transparent focus-visible:outline-none focus-visible:ring-transparent border-none"
+        />
+      </form>
     );
+  }
+
+  return (
+    <Button
+      onClick={enableEditing}
+      variant="transparent"
+      className="font-bold text-lg h-auto w-auto p-1 px-2"
+    >
+      {title}
+    </Button>
+  );
 };
